@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>7-Day Fitness Challenge</title>
+  <style>
+    :root{
+      --bg1:#f3e8ff; --bg2:#eef6ff; --muted:#6b7280; --card:#ffffff;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial;background:linear-gradient(180deg,var(--bg1),var(--bg2));color:#0f172a}
+    header{background:#fff;padding:16px 28px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 1px 0 rgba(15,23,42,0.03)}
+    .brand{display:flex;align-items:center;gap:12px;font-weight:600}
+    .logo{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#7c3aed,#06b6d4);display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px}
+    .btn{border:0;padding:8px 14px;border-radius:10px;cursor:pointer;font-weight:600}
+    .btn-primary{background:linear-gradient(90deg,#7c3aed,#06b6d4);color:#fff;box-shadow:0 6px 20px rgba(99,102,241,0.14)}
+    .container{max-width:1180px;margin:36px auto;padding:0 20px}
+    .title{ text-align:center;margin-bottom:6px;font-size:32px;font-weight:700 }
+    .subtitle{ text-align:center;color:var(--muted);margin-bottom:34px }
+
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:26px}
+    .card{background:var(--card);border-radius:14px;box-shadow:0 8px 24px rgba(2,6,23,0.06);overflow:hidden;cursor:pointer;border:1px solid rgba(2,6,23,0.04);transition:transform .22s ease,box-shadow .22s}
+    .card:hover{transform:translateY(-6px);box-shadow:0 18px 40px rgba(2,6,23,0.08)}
+    .card-top{padding:18px;color:#fff;display:flex;justify-content:space-between}
+    .card-top .left{display:flex;flex-direction:column}
+    .card-top .small{font-size:13px;opacity:.9}
+    .num{font-size:40px;font-weight:700;margin-top:6px}
+    .card-body{padding:18px}
+    .card-title{font-weight:700;margin-bottom:8px}
+    .card-desc{color:var(--muted);font-size:14px}
+    .c1{background:linear-gradient(135deg,#ef4444,#fb923c)}
+    .c2{background:linear-gradient(135deg,#fb923c,#f59e0b)}
+    .c3{background:linear-gradient(135deg,#f59e0b,#10b981)}
+    .c4{background:linear-gradient(135deg,#10b981,#06b6d4)}
+    .c5{background:linear-gradient(135deg,#06b6d4,#3b82f6)}
+    .c6{background:linear-gradient(135deg,#3b82f6,#6366f1)}
+    .c7{background:linear-gradient(135deg,#6366f1,#7c3aed)}
+    .overlay{position:fixed;inset:0;background:rgba(2,6,23,0.6);display:flex;align-items:center;justify-content:center;z-index:60;padding:20px}
+    .modal{background:var(--card);border-radius:14px;max-width:900px;width:100%;overflow:hidden}
+    .modal-hero{padding:28px;color:#fff;position:relative}
+    .modal-body{padding:24px}
+    .close-btn{position:absolute;right:18px;top:18px;background:rgba(255,255,255,0.12);border-radius:10px;padding:8px;border:0;color:#fff;cursor:pointer}
+    .admin-panel{margin-top:20px;background:linear-gradient(180deg,#fff,#fbfdff);padding:18px;border-radius:12px;border:1px solid rgba(15,23,42,0.04)}
+    .admin-grid{display:grid;grid-template-columns:1fr 360px;gap:16px}
+    .field{display:block;margin-top:10px}
+    input[type=text],textarea,select{width:100%;padding:10px;border-radius:8px;border:1px solid #e6eef8}
+    textarea{min-height:130px}
+    .preview{height:180px;border-radius:10px;background:#f3f6fb;border:1px dashed rgba(2,6,23,0.05);display:flex;align-items:center;justify-content:center;overflow:hidden}
+    .preview img{width:100%;height:100%;object-fit:cover}
+
+    @media(max-width:880px){.admin-grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand"><div class="logo">📅</div>Daily Activity Planner</div>
+    <div>
+      <button id="loginBtn" class="btn btn-primary">Admin Login</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <h1 class="title">Daily Activity Planner</h1>
+
+    <div id="grid" class="grid"></div>
+    <div id="adminArea" style="display:none" class="admin-panel"></div>
+  </div>
+  <div id="dayOverlay" style="display:none"></div>
+  <div id="loginOverlay" style="display:none"></div>
+
+<script>
+  const STORAGE_KEY = 'fitnessPlans';
+  const defaultPlans = Array.from({length:7},(_,i)=>({
+    day: i+1,
+    title: `Day ${i+1} Workout`,
+    image: '',
+    description: 'No workout plan set yet. Admin needs to add content.'
+  }));
+
+  let plans = loadPlans();
+  let isAdmin = false;
+
+  const grid = document.getElementById('grid');
+  const loginBtn = document.getElementById('loginBtn');
+  const adminArea = document.getElementById('adminArea');
+  const dayOverlay = document.getElementById('dayOverlay');
+  const loginOverlay = document.getElementById('loginOverlay');
+
+  renderGrid();
+  loginBtn.addEventListener('click', ()=> showLogin());
+
+  function loadPlans(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw){ localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultPlans)); return JSON.parse(JSON.stringify(defaultPlans)); }
+      return JSON.parse(raw);
+    }catch(e){ console.error(e); localStorage.removeItem(STORAGE_KEY); localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultPlans)); return JSON.parse(JSON.stringify(defaultPlans)); }
+  }
+  function savePlans(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(plans)); }
+
+  function renderGrid(){
+    grid.innerHTML = '';
+    plans.forEach(plan => {
+      const card = document.createElement('div'); card.className='card';
+      card.onclick = ()=> openDay(plan.day);
+
+      const top = document.createElement('div'); top.className='card-top ' + (`c${plan.day}`);
+      top.innerHTML = `<div class="left"><div class="small">Day</div><div class="num">${plan.day}</div></div><div style=\"font-size:18px;opacity:.95\">›</div>`;
+
+      const body = document.createElement('div'); body.className='card-body';
+      body.innerHTML = `<div class="card-title">${escapeHtml(plan.title)}</div><div class="card-desc">${escapeHtml(truncate(plan.description,120))}</div>`;
+
+      card.appendChild(top); card.appendChild(body);
+      grid.appendChild(card);
+    });
+  }
+  function openDay(day){
+    const plan = plans.find(p=>p.day===day);
+    dayOverlay.style.display='flex'; dayOverlay.className='overlay';
+    dayOverlay.innerHTML = '';
+
+    const modal = document.createElement('div'); modal.className='modal';
+    modal.innerHTML = `
+      <div class="modal-hero ${'c'+day}" style="background:${getGradient(day)}">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="opacity:.9">Day ${plan.day}</div>
+            <h2 style="margin:6px 0 0 0">${escapeHtml(plan.title)}</h2>
+          </div>
+          <button class="close-btn" id="closeDay">×</button>
+        </div>
+      </div>
+      <div class="modal-body">
+        ${plan.image ? `<div style="margin-bottom:18px"><img src="${plan.image}" alt="${escapeAttr(plan.title)}" style="width:100%;height:360px;object-fit:cover;border-radius:10px"></div>` : ''}
+        <div style="color:#0f172a;line-height:1.6">${nl2br(escapeHtml(plan.description))}</div>
+        <div style="margin-top:18px;text-align:right"><button id="closeDay2" class="btn btn-primary">Close</button></div>
+      </div>
+    `;
+
+    dayOverlay.appendChild(modal);
+    document.getElementById('closeDay').onclick = closeDay;
+    document.getElementById('closeDay2').onclick = closeDay;
+  }
+  function closeDay(){ dayOverlay.style.display='none'; dayOverlay.innerHTML=''; }
+
+  function showLogin(){
+    loginOverlay.style.display='flex'; loginOverlay.className='overlay'; loginOverlay.innerHTML='';
+    const modal = document.createElement('div'); modal.className='modal';
+    modal.innerHTML = `
+      <div style="padding:24px">
+        <h3>Admin Login</h3>
+        <p style="color:var(--muted);margin-top:6px">Admin Only!!!</p>
+        <div style="margin-top:12px">
+          <label class="field">Username</label>
+          <input id="admUser" type="text" placeholder="
+        " />
+          <label class="field">Password</label>
+          <input id="admPass" type="password" placeholder="" />
+          <div style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end">
+            <button id="cancelLogin" class="btn">Cancel</button>
+            <button id="submitLogin" class="btn btn-primary">Login</button>
+          </div>
+          <div id="loginErr" style="color:#b91c1c;margin-top:8px;display:none"></div>
+        </div>
+      </div>
+    `;
+    loginOverlay.appendChild(modal);
+
+    document.getElementById('cancelLogin').onclick = ()=>{ loginOverlay.style.display='none'; loginOverlay.innerHTML=''; };
+    document.getElementById('submitLogin').onclick = ()=>{
+      const u = document.getElementById('admUser').value.trim();
+      const p = document.getElementById('admPass').value.trim();
+      if(u==='admin' && p==='admin123'){ isAdmin=true; loginOverlay.style.display='none'; loginOverlay.innerHTML=''; openAdmin(); }
+      else { const e=document.getElementById('loginErr'); e.style.display='block'; e.textContent='Invalid credentials. Try admin / admin123'; }
+    };
+  }
+
+  function openAdmin(){
+    loginBtn.textContent='Logout'; loginBtn.onclick = ()=>{ logoutAdmin(); };
+    adminArea.style.display='block';
+    adminArea.innerHTML = '';
+
+    const header = document.createElement('div'); header.innerHTML = `<h2 style="margin:0 0 6px 0">Admin Dashboard</h2><div style="color:var(--muted);margin-bottom:12px">Manage your 7-day fitness challenge content</div>`;
+    adminArea.appendChild(header);
+
+    const gridWrap = document.createElement('div'); gridWrap.className='admin-grid';
+    gridWrap.innerHTML = `<div id="leftCol"></div><div id="rightCol"></div>`;
+    adminArea.appendChild(gridWrap);
+
+    const left = document.getElementById('leftCol');
+    const right = document.getElementById('rightCol');
+    const list = document.createElement('div'); list.innerHTML = '';
+    plans.forEach(p=>{
+      const item = document.createElement('div'); item.style.marginTop='10px';
+      item.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center"><div><strong>Day ${p.day}</strong><div style=\"color:var(--muted);font-size:13px\">${escapeHtml(truncate(p.title,32))}</div></div><div><button class=\"btn\" data-day=\"${p.day}\">Edit</button></div></div>`;
+      list.appendChild(item);
+    });
+    left.appendChild(list);
+    right.innerHTML = `<div><h4 style="margin-top:0">Edit Day</h4><div style="color:var(--muted);font-size:13px">Select a day on the left to edit</div><div style="height:12px"></div><div id="editor"></div></div>`;
+    left.querySelectorAll('button[data-day]').forEach(b=>b.addEventListener('click',()=> showEditor(+b.dataset.day)));
+    showEditor(1);
+  }
+
+  function showEditor(day){
+    const ed = document.getElementById('editor'); ed.innerHTML='';
+    const plan = plans.find(p=>p.day===day);
+
+    ed.innerHTML = `
+      <label class="field">Title</label>
+      <input id="editTitle" type="text" value="${escapeAttr(plan.title)}" />
+      <label class="field">Image (URL or upload)</label>
+      <div style="display:flex;gap:8px"><input id="editImageUrl" type="text" placeholder="https://..." value="${escapeAttr(plan.image)}" /><input id="editImageFile" type="file" accept="image/*" /></div>
+      <div style="height:8px"></div>
+      <div class="preview" id="imagePreview">${plan.image?`<img src="${plan.image}">`:'<div style="color:var(--muted)">No image</div>'}</div>
+      <label class="field">Description</label>
+      <textarea id="editDesc">${escapeHtml(plan.description)}</textarea>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button id="cancelEdit" class="btn">Close</button><button id="saveEdit" class="btn btn-primary">Save</button></div>
+    `;
+
+    const fileInput = document.getElementById('editImageFile');
+    const urlInput = document.getElementById('editImageUrl');
+    const preview = document.getElementById('imagePreview');
+
+    urlInput.addEventListener('input', ()=>{
+      const v = urlInput.value.trim(); if(v){ preview.innerHTML = `<img src="${escapeAttr(v)}" onerror="this.style.display='none'">`; } else { preview.innerHTML = '<div style="color:var(--muted)">No image</div>' }
+    });
+
+    fileInput.addEventListener('change', (e)=>{
+      const f = e.target.files[0]; if(!f) return; const reader = new FileReader(); reader.onload = (ev)=>{ preview.innerHTML = `<img src="${ev.target.result}">`; urlInput.value = ev.target.result; };
+      reader.readAsDataURL(f);
+    });
+
+    document.getElementById('cancelEdit').onclick = ()=>{ adminArea.style.display='none'; isAdmin=false; loginBtn.textContent='Admin Login'; loginBtn.onclick = ()=> showLogin(); renderGrid(); };
+    document.getElementById('saveEdit').onclick = ()=>{
+      const t = document.getElementById('editTitle').value.trim();
+      const d = document.getElementById('editDesc').value.trim();
+      const img = document.getElementById('editImageUrl').value.trim();
+      const idx = plans.findIndex(p=>p.day===day);
+      if(idx>-1){ plans[idx].title = t || `Day ${day} Workout`; plans[idx].description = d || 'No description'; plans[idx].image = img || ''; savePlans(); renderGrid(); alert('Saved'); }
+    };
+  }
+
+  function logoutAdmin(){ isAdmin=false; adminArea.style.display='none'; loginBtn.textContent='Admin Login'; loginBtn.onclick = ()=> showLogin(); }
+  function getGradient(day){ const g=['#ef4444,#fb923c','#fb923c,#f59e0b','#f59e0b,#10b981','#10b981,#06b6d4','#06b6d4,#3b82f6','#3b82f6,#6366f1','#6366f1,#7c3aed']; return `linear-gradient(135deg,${g[day-1]})`; }
+  function truncate(s,n){ if(!s) return ''; return s.length>n? s.slice(0,n-1)+'…': s; }
+  function escapeHtml(str){ if(!str) return ''; return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function escapeAttr(s){ return String(s||'').replace(/\"/g,'&quot;').replace(/'/g,'&#39;'); }
+  function nl2br(s){ return s.replace(/\n/g,'<br>'); }
+
+</script>
+</body>
+</html>
