@@ -171,8 +171,8 @@
     document.getElementById('submitLogin').onclick = ()=>{
       const u = document.getElementById('admUser').value.trim();
       const p = document.getElementById('admPass').value.trim();
-      if(u==='admin' && p==='admin123'){ isAdmin=true; loginOverlay.style.display='none'; loginOverlay.innerHTML=''; openAdmin(); }
-      else { const e=document.getElementById('loginErr'); e.style.display='block'; e.textContent='Invalid credentials. Try admin / admin123'; }
+      if(u==='admin' && p==='admin0907'){ isAdmin=true; loginOverlay.style.display='none'; loginOverlay.innerHTML=''; openAdmin(); }
+      else { const e=document.getElementById('loginErr'); e.style.display='block'; e.textContent='Invalid credentials.'; }
     };
   }
 
@@ -250,4 +250,5 @@
 
 </script>
 </body>
+
 </html>
