@@ -46,8 +46,16 @@
     .field{display:block;margin-top:10px}
     input[type=text],textarea,select{width:100%;padding:10px;border-radius:8px;border:1px solid #e6eef8}
     textarea{min-height:130px}
-    .preview{height:180px;border-radius:10px;background:#f3f6fb;border:1px dashed rgba(2,6,23,0.05);display:flex;align-items:center;justify-content:center;overflow:hidden}
-    .preview img{width:100%;height:100%;object-fit:cover}
+
+    /* UPDATED AUTO-RESIZE PREVIEW */
+    .preview{height:auto;min-height:130px;border-radius:10px;background:#f3f6fb;border:1px dashed rgba(2,6,23,0.05);display:flex;align-items:center;justify-content:center;overflow:hidden;padding:10px}
+    .preview img{
+      width:100%;
+      height:auto;
+      max-height:220px;
+      object-fit:contain;
+      border-radius:10px;
+    }
 
     @media(max-width:880px){.admin-grid{grid-template-columns:1fr}}
   </style>
@@ -106,7 +114,7 @@
       card.onclick = ()=> openDay(plan.day);
 
       const top = document.createElement('div'); top.className='card-top ' + (`c${plan.day}`);
-      top.innerHTML = `<div class="left"><div class="small">Day</div><div class="num">${plan.day}</div></div><div style=\"font-size:18px;opacity:.95\">›</div>`;
+      top.innerHTML = `<div class="left"><div class="small">Day</div><div class="num">${plan.day}</div></div><div style="font-size:18px;opacity:.95">›</div>`;
 
       const body = document.createElement('div'); body.className='card-body';
       body.innerHTML = `<div class="card-title">${escapeHtml(plan.title)}</div><div class="card-desc">${escapeHtml(truncate(plan.description,120))}</div>`;
@@ -115,6 +123,7 @@
       grid.appendChild(card);
     });
   }
+
   function openDay(day){
     const plan = plans.find(p=>p.day===day);
     dayOverlay.style.display='flex'; dayOverlay.className='overlay';
@@ -132,7 +141,10 @@
         </div>
       </div>
       <div class="modal-body">
-        ${plan.image ? `<div style="margin-bottom:18px"><img src="${plan.image}" alt="${escapeAttr(plan.title)}" style="width:100%;height:360px;object-fit:cover;border-radius:10px"></div>` : ''}
+        ${plan.image ? `<div style="margin-bottom:18px">
+          <img src="${plan.image}" alt="${escapeAttr(plan.title)}" 
+          style="width:100%;height:auto;max-height:450px;object-fit:contain;border-radius:10px">
+        </div>` : ''}
         <div style="color:#0f172a;line-height:1.6">${nl2br(escapeHtml(plan.description))}</div>
         <div style="margin-top:18px;text-align:right"><button id="closeDay2" class="btn btn-primary">Close</button></div>
       </div>
@@ -153,10 +165,9 @@
         <p style="color:var(--muted);margin-top:6px">Admin Only!!!</p>
         <div style="margin-top:12px">
           <label class="field">Username</label>
-          <input id="admUser" type="text" placeholder="
-        " />
+          <input id="admUser" type="text"/>
           <label class="field">Password</label>
-          <input id="admPass" type="password" placeholder="" />
+          <input id="admPass" type="password"/>
           <div style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end">
             <button id="cancelLogin" class="btn">Cancel</button>
             <button id="submitLogin" class="btn btn-primary">Login</button>
@@ -172,7 +183,7 @@
       const u = document.getElementById('admUser').value.trim();
       const p = document.getElementById('admPass').value.trim();
       if(u==='admin' && p==='admin0907'){ isAdmin=true; loginOverlay.style.display='none'; loginOverlay.innerHTML=''; openAdmin(); }
-      else { const e=document.getElementById('loginErr'); e.style.display='block'; e.textContent='Invalid credentials.'; }
+      else { const e=document.getElementById('loginErr'); e.style.display='block'; e.textContent='Invalid credentials. Try admin / admin0907'; }
     };
   }
 
@@ -193,7 +204,7 @@
     const list = document.createElement('div'); list.innerHTML = '';
     plans.forEach(p=>{
       const item = document.createElement('div'); item.style.marginTop='10px';
-      item.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center"><div><strong>Day ${p.day}</strong><div style=\"color:var(--muted);font-size:13px\">${escapeHtml(truncate(p.title,32))}</div></div><div><button class=\"btn\" data-day=\"${p.day}\">Edit</button></div></div>`;
+      item.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center"><div><strong>Day ${p.day}</strong><div style="color:var(--muted);font-size:13px">${escapeHtml(truncate(p.title,32))}</div></div><div><button class="btn" data-day="${p.day}">Edit</button></div></div>`;
       list.appendChild(item);
     });
     left.appendChild(list);
@@ -223,11 +234,22 @@
     const preview = document.getElementById('imagePreview');
 
     urlInput.addEventListener('input', ()=>{
-      const v = urlInput.value.trim(); if(v){ preview.innerHTML = `<img src="${escapeAttr(v)}" onerror="this.style.display='none'">`; } else { preview.innerHTML = '<div style="color:var(--muted)">No image</div>' }
+      const v = urlInput.value.trim();
+      if(v){
+        preview.innerHTML = `<img src="${escapeAttr(v)}" style="width:100%;height:auto;max-height:220px;object-fit:contain">`;
+      } else {
+        preview.innerHTML = '<div style="color:var(--muted)">No image</div>';
+      }
     });
 
     fileInput.addEventListener('change', (e)=>{
-      const f = e.target.files[0]; if(!f) return; const reader = new FileReader(); reader.onload = (ev)=>{ preview.innerHTML = `<img src="${ev.target.result}">`; urlInput.value = ev.target.result; };
+      const f = e.target.files[0]; 
+      if(!f) return; 
+      const reader = new FileReader(); 
+      reader.onload = (ev)=>{
+        preview.innerHTML = `<img src="${ev.target.result}" style="width:100%;height:auto;max-height:220px;object-fit:contain">`;
+        urlInput.value = ev.target.result;
+      };
       reader.readAsDataURL(f);
     });
 
@@ -250,5 +272,4 @@
 
 </script>
 </body>
-
 </html>
