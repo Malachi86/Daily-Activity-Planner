@@ -1,0 +1,142 @@
+:root{
+  --bg1:#f3e8ff;
+  --bg2:#eef6ff;
+  --muted:#6b7280;
+  --card:#ffffff;
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial;
+  background:linear-gradient(180deg,var(--bg1),var(--bg2));
+  color:#0f172a;
+}
+
+/* HEADER */
+header{
+  background:#fff;
+  padding:16px 28px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  box-shadow:0 1px 0 rgba(15,23,42,.03);
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-weight:600;
+}
+
+.logo{
+  width:40px;
+  height:40px;
+  border-radius:10px;
+  background:linear-gradient(135deg,#7c3aed,#06b6d4);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+}
+
+/* BUTTON */
+.btn{
+  border:0;
+  padding:8px 14px;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:600;
+}
+
+.btn-primary{
+  background:linear-gradient(90deg,#7c3aed,#06b6d4);
+  color:#fff;
+}
+
+/* LAYOUT */
+.container{
+  max-width:1180px;
+  margin:36px auto;
+  padding:0 20px;
+}
+
+.title{
+  text-align:center;
+  font-size:32px;
+  font-weight:700;
+  margin-bottom:30px;
+}
+
+/* GRID */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:26px;
+}
+
+/* CARD */
+.card{
+  background:#fff;
+  border-radius:14px;
+  box-shadow:0 8px 24px rgba(2,6,23,.06);
+  cursor:pointer;
+  transition:.2s;
+}
+
+.card:hover{
+  transform:translateY(-6px);
+}
+
+.card-top{
+  padding:18px;
+  color:#fff;
+  display:flex;
+  justify-content:space-between;
+}
+
+.num{
+  font-size:40px;
+  font-weight:700;
+}
+
+.card-body{
+  padding:18px;
+}
+
+.card-title{
+  font-weight:700;
+}
+
+/* COLORS */
+.c1{background:linear-gradient(135deg,#ef4444,#fb923c)}
+.c2{background:linear-gradient(135deg,#fb923c,#f59e0b)}
+.c3{background:linear-gradient(135deg,#f59e0b,#10b981)}
+.c4{background:linear-gradient(135deg,#10b981,#06b6d4)}
+.c5{background:linear-gradient(135deg,#06b6d4,#3b82f6)}
+.c6{background:linear-gradient(135deg,#3b82f6,#6366f1)}
+.c7{background:linear-gradient(135deg,#6366f1,#7c3aed)}
+
+/* MODAL */
+.overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.6);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.modal{
+  background:#fff;
+  border-radius:14px;
+  max-width:900px;
+  width:100%;
+  max-height:90vh;
+  overflow:auto;
+  scrollbar-width:none;
+}
+
+.modal::-webkit-scrollbar{display:none}
